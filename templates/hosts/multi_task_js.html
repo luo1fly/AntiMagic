@@ -1,0 +1,113 @@
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#group-list a[data='group']").click(function () {
+            $(this).nextAll('ul').toggleClass('hide');
+        });
+    });
+
+    function CheckAllToggle(ele){
+        if(ele.checked){//把它下面所有的主机都 全选
+            $(ele).next().next().next().children().children("input").prop("checked",true);
+        }else{
+            $(ele).next().next().next().children().children("input").prop("checked",false);
+        };
+    };
+
+    function SubmitTask(task_type) {
+        FormVerification(task_type);
+    };
+
+    function FormVerification(task_type) {
+        var err_list = [];
+        var data_dic = {};
+        data_dic['task_type'] = task_type;
+        data_dic['selected_hosts'] = SelectedHosts();
+        if (data_dic['selected_hosts'].length == 0){
+            err_list.push(['验证失败', '未选中任何主机']);
+        }
+        else {
+            if (task_type == 'multi_cmd') {
+                data_dic['cmd'] = $.trim($("textarea[name='cmd']").val());
+                if (data_dic['cmd'].length == 0) {
+                    err_list.push(['验证失败', '未输入要执行的命令']);
+                }
+            }
+            else if (task_type == 'multi_file_delivery') {
+                //从页面获取远程存放路径
+                var remote_file_path = $.trim($('#remote_file_path').val());
+                if (remote_file_path.length == 0) {
+                    err_list.push(['验证失败', "未输入远程文件路径!"]);
+                }
+                else {
+                    data_dic['remote_path'] = remote_file_path
+                    //从页面选择上传还是下载功能
+                    var action_type = $('#task_type').val();
+                    data_dic['file_transfer_type'] = action_type;
+                    if (action_type == 'file_send'){
+                        //判断已上传到中转站的文件列表是否为空
+                        if (upload_files.length == 0) {
+                            err_list.push(['验证失败',"还未上传任何文件到中转机！"]);
+                        }
+                        else {
+                            data_dic['upload_files'] = upload_files;
+                        }
+                    }
+                    // else file_get not come true
+
+                };
+            };
+        };
+
+        if (err_list.length > 0){
+            $("#err-msg").html("");
+            $.each(err_list, function (index, item) {
+                var err_msg = "<p style='color:red;'>" + index + ". " + item[1] + "</p>";
+                $("#err-msg").append(err_msg);
+            });
+        }else {
+            $("#err-msg").html("");
+            data_dic['csrfmiddlewaretoken'] = $("input[name='csrfmiddlewaretoken']").attr('value')
+            console.log(data_dic)
+            $.post("{% url 'submit_task' %}", data_dic, function(callback){
+                var task_id = JSON.parse(callback)
+                RefreshGetTaskResult(task_id);
+            });
+        };
+
+    };
+
+    function SelectedHosts() {
+        var selected_hosts = []
+        var all_hosts = $("input[data='bind-host']")
+
+        $.each(all_hosts, function (index, ele) {
+            if (ele.checked){
+                selected_hosts.push($(ele).val());
+            };
+        });
+        return selected_hosts
+    };
+
+    function RefreshGetTaskResult(task_id) {
+        setInterval(function () {
+            GetTaskResult(task_id);
+        },3000);
+    };
+
+    function GetTaskResult(task_id) {
+        $.getJSON("{% url 'get_task_result' %}", {'task_id': task_id}, function(callback){
+            console.log(callback);
+            PrintOnPage(callback);
+        });// end get
+    };
+
+    function PrintOnPage(result_list) {
+        $("#result-box").html("")
+        $.each(result_list, function (index, item) {
+            var row_html = "<p>" + item.bind_host__host__name + "(" + item.bind_host__host__ip_address + ") ---->" + item.bind_host__host_user__username + " ------- " + item.date + " ------ " + item.result + "</p>" +
+                "<pre>" + item.event_log + "</pre>";    //注意pre标签的用法
+            $("#result-box").append(row_html);
+        });
+    };
+
+</script>

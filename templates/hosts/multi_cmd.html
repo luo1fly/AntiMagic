@@ -1,0 +1,22 @@
+{% extends 'hosts/dashboard.html' %}
+
+{% block content-panel %}
+{% include 'hosts/host_list_component.html' %}
+    <div class="col-md-9">
+        <div class="panel panel-default panel-right">
+            <div class="panel-body">
+                {% csrf_token %}
+                {% include 'hosts/task_exec_component.html' %}
+                <div id="err-msg"></div>
+                <br/>
+                <div id="result-box"></div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block bottom-js %}
+{{ block.super }}
+{% include 'hosts/multi_task_js.html' %}
+{% endblock %}

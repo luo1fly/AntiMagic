@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block sidebar %}
+<ul id="hosts_sidebar" class="nav nav-sidebar">
+    <li class="active"><a href="{% url 'host_mgr' %}">主机</a></li>
+    <li><a href="{% url 'multi_cmd' %}">批量命令</a></li>
+    <li><a href="{% url 'file_delivery' %}">文件分发</a></li>
+    <li><a href="#">任务计划</a></li>
+    <li><a href="#">审计</a></li>
+</ul>
+{% endblock %}
+
+{% block content-panel %}
+<h1>hosts</h1>
+{% endblock %}
+
+{% block bottom-js %}
+{{ block.super }}
+<script type="text/javascript">
+    $("#hosts_sidebar a[href='{{ request.path }}']").parent().addClass('active');
+    $("#hosts_sidebar a[href='{{ request.path }}']").parent().siblings().removeClass('active');
+    $("#navbar a[href='{% url 'hosts' %}']").parent().addClass('active');
+</script>
+{% endblock %}
+
+
+
+
+

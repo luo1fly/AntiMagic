@@ -141,6 +141,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "statics"),
 ]
 
+# added by luo1fly to manage static files centralized
+STATIC_ROOT = 'static'
+
 # Customizing authentication added by luo1fly
 # https://docs.djangoproject.com/en/1.10/topics/auth/customizing/
 AUTH_USER_MODEL = 'hosts.UserProfile'

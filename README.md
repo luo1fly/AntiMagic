@@ -246,7 +246,7 @@
 5.	访问[http://192.168.0.194:8000/api/](http://192.168.0.194:8000/api/)可以查看接口信息
 6.	rest的使用还是比较复杂，这边简单说明一下，后面用到的时候再详细介绍
 ## 简单高效的身份验证方式 ##
-> 有人说https最安全，诚然在数据传输保密这块https是安全性最高的，但是我们这个需求重点是如何进行接口的认证，传输的数据都是一些配置数据，并不是那么的不容有失，所以https在这边并不适用，下面我们简单讨论一下这套被认为最安全的用户认证方式是如何工作的：
+> 身份验证方式和ssl协议是两种不同的安全机制，https重在数据传输的加密，建立连：
 
 1.	客户端需要在向服务器post的消息体（json）中包含哪些：
 	- 用户名username
@@ -414,3 +414,59 @@
 1.	数据库设计注意点：
 	- 首先，我们考虑到管理终端操作的不仅仅是物理机，还有各种各样的虚拟机，所以不能直接外键cmdb的server表，需要调用接口来查询数据，当然了，我们也可以把两个项目剥离开，放在一起是为了共用一套登录验证，详细的设计参见hosts/models.py
 	- 同步数据库
+## 生产环境使用nginx+uwsgi运行django程序 ##
+> 其实不仅仅django，所有支持wsgi方式托管的web框架开发的应用都可以用这种方式在生产环境来运行
+
+1.	克隆项目到线上服务器
+
+		[root@luo1fly ~]# git clone https://github.com/luo1fly/AntiMagic.git
+2.	修改settings.py添加如下配置
+
+		# added by luo1fly for STATIC_ROOT configuration
+		STATIC_ROOT = 'static'
+		# static是一个相对目录，参考官方文档
+3.	在项目根目录执行如下命令，将静态文件都拷贝到该目录下：
+
+		[root@luo1fly AntiMagic]# ./manage.py collectstatic
+		[root@luo1fly AntiMagic]# ls
+		AMClient  AntiMagic  assets  hosts  LICENSE  manage.py  README.md  static  statics  templates
+		[root@luo1fly AntiMagic]# ls static
+		admin  css  fonts  js  plugins  rest_framework
+4.	以上是静态文件的相关配置，真实线上也可以用nginx的location去做，这边就简化一下配置到uwsgi里面
+5.	我们采用ini文件（yaml和json也是支持的）的方式管理uwsgi，我们在项目同名目录下创建一个uwsgi.ini文件，内容如下：
+
+		[uwsgi]
+		socket = 127.0.0.1:8000
+		pidfile = /var/run/uwsgi.pid
+		daemonize = /var/log/AntiMagic/uwsgi.log
+		chdir = /var/lib/nginx/AntiMagic
+		wsgi-file = AntiMagic/wsgi.py
+		module = AntiMagic.wsgi:application
+		stats = 0.0.0.0:9191
+
+6.	执行如下命令，后台会启动一个守护进程和一个工作进程：
+
+		[root@luo1fly AntiMagic]# uwsgi --ini AntiMagic/uwsgi.ini
+		[root@luo1fly AntiMagic]# ps aux|grep uwsgi
+		root      9077  0.0  0.7 237936 29616 ?        S    14:18   0:00 uwsgi --ini AntiMagic/uwsgi.ini
+		root      9080  0.0  0.9 282020 38516 ?        S    14:18   0:00 uwsgi --ini AntiMagic/uwsgi.ini
+7.	以上过程只起了一个socket，我们可以通过telnet验证端口是否监听，但无法直接从浏览器访问页面，下面讲述提供http访问的步骤
+8.	我们采用nginx服务器作为部署环境，下面是相关的server配置（去除了很多干扰项，实际运行中酌情配置）：
+
+		server {
+		        listen       80;
+		        server_name  localhost;
+		
+		        location / {
+		            include uwsgi_params;
+			    	uwsgi_pass 127.0.0.1:8000;
+		        }
+		
+				location ~ /static {
+				    root /var/lib/nginx/AntiMagic;
+				}
+				...
+		}
+9.	我们要重点关注一下static相关的location，思考为什么第一第二步要将静态文件集中到一个路径，为什么不在uwsgi测进行静态文件处理（事实上是可以的，我们称之为动静分离，但这是web服务器的强项，而不应该交给cgi管理器去处理，这就是原因所在）
+10.	启动nginx以后可以访问一下80端口
+11.	一些常用的优化配置可以参考相关文档

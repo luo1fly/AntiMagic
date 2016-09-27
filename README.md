@@ -1,4 +1,5 @@
 # AntiMagic说明文档 #
+
 ## settings.py起始设置 ##
 1.	数据库连接：
 	- 创建名为antimagic的数据库，指定默认字符集utf8，授权django用户所有权限
@@ -117,6 +118,7 @@
 		Password (again): 
 		Superuser created successfully.
 8.	创建用户完成后pycharm启动服务，用刚刚创建的用户登录后台，可以查看到自己的数据
+
 ## 创建cmdb表结构 ##
 > cmdb的核心在于数据库设计，我们把服务器端程序放置在assets应用下
 
@@ -176,6 +178,7 @@
 		def index(request):
 		    return render(request, 'index.html')
 		# 索引视图前加上login_required装饰器，强制进行登录验证，在你认为需要登录的页面视图前都可以这么用
+		
 ## djangorestframework的引入 ##
 >  CMDB本质上是维护了一个配置数据库，所以提供客户端导入数据接口和外部查询接口是必要的，我们引入一下restframework的概念：[http://www.ruanyifeng.com/blog/2014/05/restful_api.html](http://www.ruanyifeng.com/blog/2014/05/restful_api.html)。django中我们使用djangorestframework框架来实现，下面简单介绍一下在本项目中的运用。
 
@@ -245,6 +248,7 @@
 		        # fields = ('url', 'name', 'email', 'is_admin')
 5.	访问[http://192.168.0.194:8000/api/](http://192.168.0.194:8000/api/)可以查看接口信息
 6.	rest的使用还是比较复杂，这边简单说明一下，后面用到的时候再详细介绍
+
 ## 简单高效的身份验证方式 ##
 > 身份验证方式和ssl协议是两种不同的安全机制，https重在数据传输的加密，建立连：
 
@@ -343,6 +347,7 @@
 				        return HttpResponse(json.dumps(ass_handler.response))
 				    return HttpResponse('--test--')
 	- 注意装饰器的使用，非常巧妙
+	
 ## 自定义用户模板 ##
 > 常用模版工具有filter和simpletag，他们本质上还是功能函数，下面简单说一下怎么使用，详细参考：[https://docs.djangoproject.com/en/1.10/howto/custom-template-tags/](https://docs.djangoproject.com/en/1.10/howto/custom-template-tags/)
 

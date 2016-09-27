@@ -64,6 +64,7 @@
 			        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
 			    ]
 			}
+			
 ## 创建自定义用户认证 ##
 > 由于我们要建立包含cmdb和主机管理功能的项目，所以将用户认证的功能放置在主机管理app下
 

@@ -50,7 +50,7 @@ def new_assets_approval(request):
                 obj.approved = True
                 obj.save()
 
-            response_dic[obj.id]= ass_handler.response
+            response_dic[obj.id] = ass_handler.response
         return render(request,'assets/new_assets_approval.html',{'new_assets':approved_asset_list,'response_dic':response_dic})
     else:
         ids = request.GET.get('ids')
